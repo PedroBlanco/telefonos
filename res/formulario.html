@@ -1,0 +1,19 @@
+<tr>
+<td>
+<form id="f_busqueda_xhr" action="phone.php" method="get" target="_self">
+<br/>
+<fieldset class="center-content">
+<legend><em>B&uacute;squeda de tel&eacute;fonos</em></legend>
+<br/>
+
+&nbsp;
+<label for="consulta">Escriba un nombre o apellido (o parte)</label>
+<input id="consulta" name="consulta" type="search" placeholder="p.e. Fran" autofocus required />
+
+&nbsp;<input id="b_submit" type="submit" value="Buscar" onclick="busqueda_xhr(document.getElementById('consulta').value,'resultado');return false;"/>
+
+&nbsp;<input type="reset" value="Limpiar" onclick="limpiar_resultado('resultado');"/>&nbsp;
+
+<br/><br/></fieldset><br/></form>
+</td>
+</tr>
