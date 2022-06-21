@@ -290,7 +290,10 @@ while ( ! $terminado ) {
                 } else {
                     // $resultado[] = array ( $fila_csv[2] => $fila_csv[10] );
                     $resultado[$fila_csv[2]] = trim($fila_csv[1],"'");
-                    $resultado_2[] = array ( 'name' => $fila_csv[2], 'phone' => $fila_csv[1] );
+                    //$resultado_2[] = array ( 'name' => $fila_csv[2], 'phone' => $fila_csv[1] );
+                    $resultado_2[] = array ( 'name' => $fila_csv[2],'service'=>$fila_csv[3],'organism'=>$fila_csv[4], 'phone' => $fila_csv[1] );
+                    
+
                     $mensaje .= $fila_csv[2].' => '.trim($fila_csv[1],"'").'$';
                 }
             }
