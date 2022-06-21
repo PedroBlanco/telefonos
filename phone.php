@@ -160,7 +160,12 @@ while ( ! $terminado ) {
                             continue;
                         } else {
                             // Para obtener los resultados ordenados deberiamos hacer una insercion ordenada o crear un array, ordenarlo y pasarlo a cadena
-                            $array_mensaje[] = $fila_csv[2].' => '.trim($fila_csv[1],"'");
+                            // $fila_csv[2]: Apellidos, Nombre
+                            // $fila_csv[3]: Servicio
+                            // $fila_csv[4]: Organismo
+                            // $fila_csv[1]: extensión
+                            $array_mensaje[] = $fila_csv[2].';'.$fila_csv[3].';'.$fila_csv[4].' => '.trim($fila_csv[1],"'");
+                             
                         }
                     }
                 }
