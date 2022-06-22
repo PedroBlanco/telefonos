@@ -53,25 +53,6 @@ $mensaje = $_config['mensaje_defecto'];
 $nombre_fichero = $_config['nombre_fichero'];
 
 
-// Filtramos (a mano):
-// "SIN ASIGNAR ..."
-// "H LINE ATRIAN 901 500 501"
-// "fax antiguo delegacion"
-// Cadena vacia?
-// TODO: Mejorar la forma de exclusion (numeros excluidos fijos y variables)
-
-// Peticiones excluyentes (por orden):
-// 1- ?xhr=cadena -> buscamos cadena en los nombres de personas y devolvemos los resultados en JSON
-// 2-?script=true -> devolvemos el script generico de bookmarklet para no necesitar actualizar todos los navegadores
-// 3- ?bookmarklet=true -> devolvemos el script de bookmarklet a ejecutar 
-// 4- ?thunder=true -> devolvemos todos los resultados en pestañas, con una pestaña adicional de busqueda xhr
-// 6- ?simple=true -> mostramos el formulario de busqueda simple
-// 7- <vacio> -> la opcion por defecto es mostrar el modo pestañas
-
-// Peticiones no excluyentes
-// ?consulta=cadena -> buscamos cadena en los nombres de personas; si va sola devolvemos los resultados en HTML (consulta simple)
-// ?upd=true -> muestra en el modo simple y pestañas el desplegable de añadir bookmarklet 
-
 // Antes de configurar el tipo de entrada, comprobamos si deberemos mostrar el enlace de bookmarklet con $_GET['upd']
 if (isset($_GET['upd'])) {
     $upd = true;
@@ -111,9 +92,7 @@ while ( ! $terminado ) {
                 $fila_csv = fgetcsv($fichero_csv, 0, ';');
                 for ( ; $fila_csv = fgetcsv($fichero_csv, 0, ';') ; )
                 {
-                    if ( in_array ( $fila_csv[1], $_config['lista_ignorados'] ) ) { //No hace nada...
-                        continue;
-                    } else {
+                  
                         $posicion = strpos ( $fila_csv[2], $consulta);
                         if ($posicion === false) {
                             continue;
@@ -126,7 +105,7 @@ while ( ! $terminado ) {
                             $array_mensaje[] = $fila_csv[2].';'.$fila_csv[3].';'.$fila_csv[4].' => '.trim($fila_csv[1],"'");
                              
                         }
-                    }
+                    
                 }
                 
                 // En vez de hacer una insercion ordenada, vamos a ordenar el array de resultados
@@ -163,53 +142,6 @@ while ( ! $terminado ) {
 
         header("Content-Type: text/plain");
         print $mensaje;
-        
-    } elseif (isset($_GET['bookmarklet'])) { // Consulta para devolver el código de Bookmarklet a añadir como Marcador/Favorito
-        $terminado = true;
-
-        /* Devolvemos el codigo de bookmarklet especifica para ejecutarlo */
-        $mensaje = $bookmarklet_especifica;
-        
-        header('Access-Control-Allow-Origin: *');
-        header('Access-Control-Allow-Methods: GET');
-        header('Access-Control-Allow-Headers: Content-Type');
-        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-        header("Cache-Control: post-check=0, pre-check=0", false);
-        header("Pragma: no-cache");
-        header('Content-Type: text/javascript');
-        
-        //header("Content-Type: text/plain");
-        print $mensaje;
-        
-    } elseif (isset($_GET['thunder'])) { // Consulta desde Mozilla Thunderbird (cuando está configurado para abrir esta página como inicio) para devolver la página de búsqueda
-        $terminado = true;
-        
-        // Creamos array de indices
-        $indice = array ();
-        $letras = array ('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z');
-        foreach ($letras as $clave) {
-            $indice[$clave] = array();
-        }
-        
-        // TODO: Tal vez haya que hacer un par de comprobaciones
-        $fichero_csv = fopen ( $nombre_fichero, 'r' );
-        
-        $fila_csv = fgetcsv($fichero_csv, 0, ';');
-        for ( ; $fila_csv = fgetcsv($fichero_csv, 0, ';') ; )
-        {
-            if ( in_array ( $fila_csv[1], $_config['lista_ignorados'] ) ) {
-                continue;
-            } else {
-                // Metemos en el índice alfabético las entradas no ignoradas del archivo csv
-                $indice[$fila_csv[2][0]][$fila_csv[2]] = trim($fila_csv[1],"'");
-            }
-        }
-        
-        fclose($fichero_csv);
-        
-        include 'cabecera.php';
-        include 'guia_alfabetica.php';
-        include 'pie.php';
     } elseif (isset($_GET['consulta'])) { // Consulta para devolver el código de Bookmarklet a añadir como Marcador/Favorito
         // En el caso de $_GET['consulta'] sin ejecutarse alguna otra rama anterior, suponemos que debemos mostrar la consulta simple,
         // pues la opcion de pestañas no soporta la busqueda directa por $_GET y el resto bien la ignora bien requiere otros parametros
