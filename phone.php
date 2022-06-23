@@ -52,6 +52,66 @@ $mensaje = $_config['mensaje_defecto'];
 // Nombre del archivo CSV de origen
 $nombre_fichero = $_config['nombre_fichero'];
 
+// Las bookmarklet (marcadores inteligentes) consultan siempre por https para evitar errores por Mixed Content
+$bookmarklet_generica = <<<'EOD'
+javascript: (function () {
+	var jsCode = document.createElement('script');
+	jsCode.setAttribute('src', 'https://<url_suffix>/phone.php?bookmarklet=true');
+	document.body.appendChild(jsCode);
+}());
+EOD;
+
+// Version abreviada para la url del marcador inteligente
+// TODO: Buscar la forma de abreviarla de forma automatica y usar solo una version
+$bookmarklet_generica_abreviada = "javascript:(function(){var%20jsCode=document.createElement('script');jsCode.setAttribute('src','https://<url_suffix>/phone.php?script=true');document.body.appendChild(jsCode);}());";
+
+$bookmarklet_especifica = <<<'EOD'
+javascript:(function() {
+	var text = prompt( 'Persona a buscar','' ).toUpperCase()
+	.replace(/Á/gi,"A")
+	.replace(/É/gi,"E")
+	.replace(/Í/gi,"I")
+	.replace(/Ó/gi,"O")
+	.replace(/Ú/gi,"U")
+	;
+	var request = new XMLHttpRequest();
+	request.open("GET", "https://<url_suffix>/phone.php?xhr=true&consulta="+text, true);
+	request.onreadystatechange = function() {
+	  var done = 4, ok = 200;
+	  if (request.readyState == done && request.status == ok) {
+	    if (request.responseText) {
+	      alert ( request.responseText.replace(/(^"|\$"$|"$)/g, '' ).trim().replace(/\=\>$/gm, '' ).replace(/\$/gm, '\n' ) );
+	    }
+	  }
+	};
+	request.send(null);
+})();
+EOD;
+
+$bookmarklet_generica = str_replace ( '<url_suffix>', $_config['url_suffix'], $bookmarklet_generica );
+$bookmarklet_generica_abreviada = str_replace ( '<url_suffix>', $_config['url_suffix'], $bookmarklet_generica_abreviada );
+$bookmarklet_especifica = str_replace ( '<url_suffix>', $_config['url_suffix'], $bookmarklet_especifica );
+
+$template->assign( 'url_bookmarklet', $bookmarklet_generica_abreviada );
+
+// Filtramos (a mano):
+// "SIN ASIGNAR ..."
+// "H LINE ATRIAN 901 500 501"
+// "fax antiguo delegacion"
+// Cadena vacia?
+// TODO: Mejorar la forma de exclusion (numeros excluidos fijos y variables)
+
+// Peticiones excluyentes (por orden):
+// 1- ?xhr=cadena -> buscamos cadena en los nombres de personas y devolvemos los resultados en JSON
+// 2-?script=true -> devolvemos el script generico de bookmarklet para no necesitar actualizar todos los navegadores
+// 3- ?bookmarklet=true -> devolvemos el script de bookmarklet a ejecutar 
+// 4- ?thunder=true -> devolvemos todos los resultados en pestañas, con una pestaña adicional de busqueda xhr
+// 6- ?simple=true -> mostramos el formulario de busqueda simple
+// 7- <vacio> -> la opcion por defecto es mostrar el modo pestañas
+
+// Peticiones no excluyentes
+// ?consulta=cadena -> buscamos cadena en los nombres de personas; si va sola devolvemos los resultados en HTML (consulta simple)
+// ?upd=true -> muestra en el modo simple y pestañas el desplegable de añadir bookmarklet 
 
 // Antes de configurar el tipo de entrada, comprobamos si deberemos mostrar el enlace de bookmarklet con $_GET['upd']
 if (isset($_GET['upd'])) {
@@ -92,20 +152,18 @@ while ( ! $terminado ) {
                 $fila_csv = fgetcsv($fichero_csv, 0, ';');
                 for ( ; $fila_csv = fgetcsv($fichero_csv, 0, ';') ; )
                 {
-                  
+                    if ( in_array ( $fila_csv[1], $_config['lista_ignorados'] ) ) { //No hace nada...
+                        continue;
+                    } else {
                         $posicion = strpos ( $fila_csv[2], $consulta);
                         if ($posicion === false) {
                             continue;
                         } else {
                             // Para obtener los resultados ordenados deberiamos hacer una insercion ordenada o crear un array, ordenarlo y pasarlo a cadena
-                            // $fila_csv[2]: Apellidos, Nombre
-                            // $fila_csv[3]: Servicio
-                            // $fila_csv[4]: Organismo
-                            // $fila_csv[1]: extensión
-                            $array_mensaje[] = $fila_csv[2].';'.$fila_csv[3].';'.$fila_csv[4].' => '.trim($fila_csv[1],"'");
-                             
+                
+                            $array_mensaje[] = $fila_csv[2]. " - " . $fila_csv[3]." - ".$fila_csv[4]. " => " .trim($fila_csv[1],"'");
                         }
-                    
+                    }
                 }
                 
                 // En vez de hacer una insercion ordenada, vamos a ordenar el array de resultados
@@ -142,6 +200,36 @@ while ( ! $terminado ) {
 
         header("Content-Type: text/plain");
         print $mensaje;
+        
+
+        
+    } elseif (isset($_GET['thunder'])) { // Consulta desde Mozilla Thunderbird (cuando está configurado para abrir esta página como inicio) para devolver la página de búsqueda
+        $terminado = true;
+        
+        // Creamos array de indices
+        $indice = array ();
+        $letras = array ('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z');
+        foreach ($letras as $clave) {
+            $indice[$clave] = array();
+        }
+        
+        // TODO: Tal vez haya que hacer un par de comprobaciones
+        $fichero_csv = fopen ( $nombre_fichero, 'r' );
+        
+        $fila_csv = fgetcsv($fichero_csv, 0, ';');
+        for ( ; $fila_csv = fgetcsv($fichero_csv, 0, ';') ; )
+        {
+           
+                // Metemos en el índice alfabético las entradas no ignoradas del archivo csv
+                $indice[$fila_csv[2][0]][$fila_csv[2]] = trim($fila_csv[1],"'");
+            
+        }
+        
+        fclose($fichero_csv);
+        
+        include 'cabecera.php';
+        include 'guia_alfabetica.php';
+        include 'pie.php';
     } elseif (isset($_GET['consulta'])) { // Consulta para devolver el código de Bookmarklet a añadir como Marcador/Favorito
         // En el caso de $_GET['consulta'] sin ejecutarse alguna otra rama anterior, suponemos que debemos mostrar la consulta simple,
         // pues la opcion de pestañas no soporta la busqueda directa por $_GET y el resto bien la ignora bien requiere otros parametros
@@ -181,10 +269,7 @@ while ( ! $terminado ) {
                 } else {
                     // $resultado[] = array ( $fila_csv[2] => $fila_csv[10] );
                     $resultado[$fila_csv[2]] = trim($fila_csv[1],"'");
-                    //$resultado_2[] = array ( 'name' => $fila_csv[2], 'phone' => $fila_csv[1] );
-                    $resultado_2[] = array ( 'name' => $fila_csv[2],'service'=>$fila_csv[3],'organism'=>$fila_csv[4], 'phone' => $fila_csv[1] );
-                    
-
+                    $resultado_2[] = array ( 'name' => $fila_csv[2], 'phone' => $fila_csv[1] );
                     $mensaje .= $fila_csv[2].' => '.trim($fila_csv[1],"'").'$';
                 }
             }
