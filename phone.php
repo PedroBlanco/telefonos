@@ -161,15 +161,6 @@ while ( ! $terminado ) {
         
         print json_encode($mensaje, JSON_UNESCAPED_UNICODE);
         
-    } elseif (isset($_GET['script'])) { // Consulta para devolver el código de Bookmarklet a añadir como Marcador/Favorito
-        $terminado = true;
-        
-        /* Devolvemos el codigo de bookmarklet generica para poder añadirlo como marcador */
-        $mensaje = $bookmarklet_generica;
-
-        header("Content-Type: text/plain");
-        print $mensaje;
-        
     } elseif (isset($_GET['bookmarklet'])) { // Consulta para devolver el código de Bookmarklet a añadir como Marcador/Favorito
         $terminado = true;
 
