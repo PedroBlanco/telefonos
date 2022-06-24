@@ -120,9 +120,6 @@ while ( ! $terminado ) {
                     // Buscamos una cadena (nombre, apellidos)
                     else{
                     
-                    if ( in_array ( $fila_csv[1], $_config['lista_ignorados'] ) ) { //No hace nada...
-                        continue;
-                    } else {
                         $posicion = strpos ( $fila_csv[2], $consulta);
                         if ($posicion === false) {
                             continue;
@@ -130,7 +127,7 @@ while ( ! $terminado ) {
                             // Para obtener los resultados ordenados deberiamos hacer una insercion ordenada o crear un array, ordenarlo y pasarlo a cadena
                             $array_mensaje[] = $fila_csv[2]. " (".ucwords(strtolower($fila_csv[3]))." - ".(ucwords(strtolower($fila_csv[4]))).")".' => '.trim($fila_csv[1],"'");
                         }
-                    }
+                    
                 }
             }
                 
@@ -176,12 +173,10 @@ while ( ! $terminado ) {
         $fila_csv = fgetcsv($fichero_csv, 0, ';');
         for ( ; $fila_csv = fgetcsv($fichero_csv, 0, ';') ; )
         {
-            if ( in_array ( $fila_csv[1], $_config['lista_ignorados'] ) ) {
-                continue;
-            } else {
+          
                 // Metemos en el índice alfabético las entradas no ignoradas del archivo csv
                 $indice[$fila_csv[2][0]][$fila_csv[2]] = trim($fila_csv[1],"'");
-            }
+            
         }
         
         fclose($fichero_csv);
@@ -219,19 +214,17 @@ while ( ! $terminado ) {
         $fila_csv = fgetcsv($fichero_csv, 0, ';');
         for ( ; $fila_csv = fgetcsv($fichero_csv, 0, ';') ; )
         {
-            if ( in_array ( $fila_csv[1], $_config['lista_ignorados'] ) ) { //No hace nada...
-                continue;
-            } else {
+          
                 $posicion = strpos ( $fila_csv[2], $consulta);
                 if ($posicion === false) {
                     continue;
-                } else {
-                    // $resultado[] = array ( $fila_csv[2] => $fila_csv[10] );
+                } else { 
+
                     $resultado[$fila_csv[2]] = trim($fila_csv[1],"'");
                     $resultado_2[] = array ( 'name' => $fila_csv[2], 'phone' => $fila_csv[1] );
                     $mensaje .= $fila_csv[2].' => '.trim($fila_csv[1],"'").'$';
                 }
-            }
+            
         }
         
         fclose($fichero_csv);
