@@ -150,12 +150,17 @@ while ( ! $terminado ) {
                     // Buscamos un número 
                     if (is_numeric($consulta)) {
                        
-                            $array_mensaje[] = "HOLA";
-                        }
+                          $posicion=strpos($fila_csv[1],$consulta);
+                          if ($posicion === false) {
+                            continue;
+                        } else {
+                            // Para obtener los resultados ordenados deberiamos hacer una insercion ordenada o crear un array, ordenarlo y pasarlo a cadena
+                            $array_mensaje[] = $fila_csv[2]. "(".ucwords(strtolower($fila_csv[3]))." - ".(ucwords(strtolower($fila_csv[4]))).")".' => '.trim($fila_csv[1],"'");
+                        }                          
+                    }
                     
                     // Buscamos una cadena (nombre, apellidos)
                     else{
-
                     
                     if ( in_array ( $fila_csv[1], $_config['lista_ignorados'] ) ) { //No hace nada...
                         continue;
