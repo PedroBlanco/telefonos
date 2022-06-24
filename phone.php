@@ -114,7 +114,7 @@ while ( ! $terminado ) {
                             continue;
                         } else {
                             // Para obtener los resultados ordenados deberiamos hacer una insercion ordenada o crear un array, ordenarlo y pasarlo a cadena
-                            $array_mensaje[] = $fila_csv[2]. "(".ucwords(strtolower($fila_csv[3]))." - ".(ucwords(strtolower($fila_csv[4]))).")".' => '.trim($fila_csv[1],"'");
+                            $array_mensaje[] = $fila_csv[2]. " (".ucwords(strtolower($fila_csv[3]))." - ".(ucwords(strtolower($fila_csv[4]))).")".' => '.trim($fila_csv[1],"'");
                         }                          
                     }
                     
@@ -129,7 +129,7 @@ while ( ! $terminado ) {
                             continue;
                         } else {
                             // Para obtener los resultados ordenados deberiamos hacer una insercion ordenada o crear un array, ordenarlo y pasarlo a cadena
-                            $array_mensaje[] = $fila_csv[2]. "(".ucwords(strtolower($fila_csv[3]))." - ".(ucwords(strtolower($fila_csv[4]))).")".' => '.trim($fila_csv[1],"'");
+                            $array_mensaje[] = $fila_csv[2]. " (".ucwords(strtolower($fila_csv[3]))." - ".(ucwords(strtolower($fila_csv[4]))).")".' => '.trim($fila_csv[1],"'");
                         }
                     }
                 }
