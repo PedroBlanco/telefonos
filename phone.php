@@ -70,7 +70,6 @@ $nombre_fichero = $_config['nombre_fichero'];
 
 // Peticiones no excluyentes
 // ?consulta=cadena -> buscamos cadena en los nombres de personas; si va sola devolvemos los resultados en HTML (consulta simple)
-// ?upd=true -> muestra en el modo simple y pestañas el desplegable de añadir bookmarklet 
 
 
 
