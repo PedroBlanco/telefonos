@@ -1,10 +1,8 @@
 # Listas de telefonos
 telefonos.*
-config_ignorados.*
 
 # Configuracion
 config.php
-config_ldap.php
 
 # Archivos de proyectos y varios
 .buildpath

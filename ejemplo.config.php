@@ -29,10 +29,6 @@ $_config = [
 ];
 
 
-// Fichero de configuración opcional: extensiones presentes en el archivo CSV pero que no queremos mostrar
-if ( file_exists ( 'config_ignorados.php' ) ) {
-    include_once 'config_ignorados.php';
-} else {
-    // Si no existe el archivo de configuración, creamos una lista vacía
+
     $_config = array_merge ( $_config, ['lista_ignorados' => array () ] );
-}
+
