@@ -161,23 +161,6 @@ while ( ! $terminado ) {
         
         print json_encode($mensaje, JSON_UNESCAPED_UNICODE);
         
-    } elseif (isset($_GET['bookmarklet'])) { // Consulta para devolver el código de Bookmarklet a añadir como Marcador/Favorito
-        $terminado = true;
-
-        /* Devolvemos el codigo de bookmarklet especifica para ejecutarlo */
-        $mensaje = $bookmarklet_especifica;
-        
-        header('Access-Control-Allow-Origin: *');
-        header('Access-Control-Allow-Methods: GET');
-        header('Access-Control-Allow-Headers: Content-Type');
-        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-        header("Cache-Control: post-check=0, pre-check=0", false);
-        header("Pragma: no-cache");
-        header('Content-Type: text/javascript');
-        
-        //header("Content-Type: text/plain");
-        print $mensaje;
-        
     } elseif (isset($_GET['thunder'])) { // Consulta desde Mozilla Thunderbird (cuando está configurado para abrir esta página como inicio) para devolver la página de búsqueda
         $terminado = true;
         
