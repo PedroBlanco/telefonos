@@ -52,47 +52,6 @@ $mensaje = $_config['mensaje_defecto'];
 // Nombre del archivo CSV de origen
 $nombre_fichero = $_config['nombre_fichero'];
 
-// Las bookmarklet (marcadores inteligentes) consultan siempre por https para evitar errores por Mixed Content
-$bookmarklet_generica = <<<'EOD'
-javascript: (function () {
-	var jsCode = document.createElement('script');
-	jsCode.setAttribute('src', 'https://<url_suffix>/phone.php?bookmarklet=true');
-	document.body.appendChild(jsCode);
-}());
-EOD;
-
-// Version abreviada para la url del marcador inteligente
-// TODO: Buscar la forma de abreviarla de forma automatica y usar solo una version
-$bookmarklet_generica_abreviada = "javascript:(function(){var%20jsCode=document.createElement('script');jsCode.setAttribute('src','https://<url_suffix>/phone.php?script=true');document.body.appendChild(jsCode);}());";
-
-$bookmarklet_especifica = <<<'EOD'
-javascript:(function() {
-	var text = prompt( 'Persona a buscar','' ).toUpperCase()
-	.replace(/Á/gi,"A")
-	.replace(/É/gi,"E")
-	.replace(/Í/gi,"I")
-	.replace(/Ó/gi,"O")
-	.replace(/Ú/gi,"U")
-	;
-	var request = new XMLHttpRequest();
-	request.open("GET", "https://<url_suffix>/phone.php?xhr=true&consulta="+text, true);
-	request.onreadystatechange = function() {
-	  var done = 4, ok = 200;
-	  if (request.readyState == done && request.status == ok) {
-	    if (request.responseText) {
-	      alert ( request.responseText.replace(/(^"|\$"$|"$)/g, '' ).trim().replace(/\=\>$/gm, '' ).replace(/\$/gm, '\n' ) );
-	    }
-	  }
-	};
-	request.send(null);
-})();
-EOD;
-
-$bookmarklet_generica = str_replace ( '<url_suffix>', $_config['url_suffix'], $bookmarklet_generica );
-$bookmarklet_generica_abreviada = str_replace ( '<url_suffix>', $_config['url_suffix'], $bookmarklet_generica_abreviada );
-$bookmarklet_especifica = str_replace ( '<url_suffix>', $_config['url_suffix'], $bookmarklet_especifica );
-
-$template->assign( 'url_bookmarklet', $bookmarklet_generica_abreviada );
 
 // Filtramos (a mano):
 // "SIN ASIGNAR ..."
@@ -111,14 +70,8 @@ $template->assign( 'url_bookmarklet', $bookmarklet_generica_abreviada );
 
 // Peticiones no excluyentes
 // ?consulta=cadena -> buscamos cadena en los nombres de personas; si va sola devolvemos los resultados en HTML (consulta simple)
-// ?upd=true -> muestra en el modo simple y pestañas el desplegable de añadir bookmarklet 
 
-// Antes de configurar el tipo de entrada, comprobamos si deberemos mostrar el enlace de bookmarklet con $_GET['upd']
-if (isset($_GET['upd'])) {
-    $upd = true;
-} else {
-    $upd = false;
-}
+
 
 // Ejecutamos un bucle para poder elegir una opcion por defecto en caso de no ser proporcionada en $_GET
 $terminado = false;
@@ -152,18 +105,31 @@ while ( ! $terminado ) {
                 $fila_csv = fgetcsv($fichero_csv, 0, ';');
                 for ( ; $fila_csv = fgetcsv($fichero_csv, 0, ';') ; )
                 {
-                    if ( in_array ( $fila_csv[1], $_config['lista_ignorados'] ) ) { //No hace nada...
-                        continue;
-                    } else {
+                    // Buscamos un número 
+                    if (is_numeric($consulta)) {
+                       
+                          $posicion=strpos($fila_csv[1],$consulta);
+                          if ($posicion === false) {
+                            continue;
+                        } else {
+                            // Para obtener los resultados ordenados deberiamos hacer una insercion ordenada o crear un array, ordenarlo y pasarlo a cadena
+                            $array_mensaje[] = $fila_csv[2]. " (".ucwords(strtolower($fila_csv[3]))." - ".(ucwords(strtolower($fila_csv[4]))).")".' => '.trim($fila_csv[1],"'");
+                        }                          
+                    }
+                    
+                    // Buscamos una cadena (nombre, apellidos)
+                    else{
+                    
                         $posicion = strpos ( $fila_csv[2], $consulta);
                         if ($posicion === false) {
                             continue;
                         } else {
                             // Para obtener los resultados ordenados deberiamos hacer una insercion ordenada o crear un array, ordenarlo y pasarlo a cadena
-                            $array_mensaje[] = $fila_csv[2].' => '.trim($fila_csv[1],"'");
+                            $array_mensaje[] = $fila_csv[2]. " (".ucwords(strtolower($fila_csv[3]))." - ".(ucwords(strtolower($fila_csv[4]))).")".' => '.trim($fila_csv[1],"'");
                         }
-                    }
+                    
                 }
+            }
                 
                 // En vez de hacer una insercion ordenada, vamos a ordenar el array de resultados
                 natsort ( $array_mensaje );
@@ -191,32 +157,6 @@ while ( ! $terminado ) {
         
         print json_encode($mensaje, JSON_UNESCAPED_UNICODE);
         
-    } elseif (isset($_GET['script'])) { // Consulta para devolver el código de Bookmarklet a añadir como Marcador/Favorito
-        $terminado = true;
-        
-        /* Devolvemos el codigo de bookmarklet generica para poder añadirlo como marcador */
-        $mensaje = $bookmarklet_generica;
-
-        header("Content-Type: text/plain");
-        print $mensaje;
-        
-    } elseif (isset($_GET['bookmarklet'])) { // Consulta para devolver el código de Bookmarklet a añadir como Marcador/Favorito
-        $terminado = true;
-
-        /* Devolvemos el codigo de bookmarklet especifica para ejecutarlo */
-        $mensaje = $bookmarklet_especifica;
-        
-        header('Access-Control-Allow-Origin: *');
-        header('Access-Control-Allow-Methods: GET');
-        header('Access-Control-Allow-Headers: Content-Type');
-        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-        header("Cache-Control: post-check=0, pre-check=0", false);
-        header("Pragma: no-cache");
-        header('Content-Type: text/javascript');
-        
-        //header("Content-Type: text/plain");
-        print $mensaje;
-        
     } elseif (isset($_GET['thunder'])) { // Consulta desde Mozilla Thunderbird (cuando está configurado para abrir esta página como inicio) para devolver la página de búsqueda
         $terminado = true;
         
@@ -233,12 +173,10 @@ while ( ! $terminado ) {
         $fila_csv = fgetcsv($fichero_csv, 0, ';');
         for ( ; $fila_csv = fgetcsv($fichero_csv, 0, ';') ; )
         {
-            if ( in_array ( $fila_csv[1], $_config['lista_ignorados'] ) ) {
-                continue;
-            } else {
+          
                 // Metemos en el índice alfabético las entradas no ignoradas del archivo csv
                 $indice[$fila_csv[2][0]][$fila_csv[2]] = trim($fila_csv[1],"'");
-            }
+            
         }
         
         fclose($fichero_csv);
@@ -276,19 +214,17 @@ while ( ! $terminado ) {
         $fila_csv = fgetcsv($fichero_csv, 0, ';');
         for ( ; $fila_csv = fgetcsv($fichero_csv, 0, ';') ; )
         {
-            if ( in_array ( $fila_csv[1], $_config['lista_ignorados'] ) ) { //No hace nada...
-                continue;
-            } else {
+          
                 $posicion = strpos ( $fila_csv[2], $consulta);
                 if ($posicion === false) {
                     continue;
-                } else {
-                    // $resultado[] = array ( $fila_csv[2] => $fila_csv[10] );
+                } else { 
+
                     $resultado[$fila_csv[2]] = trim($fila_csv[1],"'");
                     $resultado_2[] = array ( 'name' => $fila_csv[2], 'phone' => $fila_csv[1] );
                     $mensaje .= $fila_csv[2].' => '.trim($fila_csv[1],"'").'$';
                 }
-            }
+            
         }
         
         fclose($fichero_csv);
