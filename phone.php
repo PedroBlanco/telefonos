@@ -52,47 +52,6 @@ $mensaje = $_config['mensaje_defecto'];
 // Nombre del archivo CSV de origen
 $nombre_fichero = $_config['nombre_fichero'];
 
-// Las bookmarklet (marcadores inteligentes) consultan siempre por https para evitar errores por Mixed Content
-$bookmarklet_generica = <<<'EOD'
-javascript: (function () {
-	var jsCode = document.createElement('script');
-	jsCode.setAttribute('src', 'https://<url_suffix>/phone.php?bookmarklet=true');
-	document.body.appendChild(jsCode);
-}());
-EOD;
-
-// Version abreviada para la url del marcador inteligente
-// TODO: Buscar la forma de abreviarla de forma automatica y usar solo una version
-$bookmarklet_generica_abreviada = "javascript:(function(){var%20jsCode=document.createElement('script');jsCode.setAttribute('src','https://<url_suffix>/phone.php?script=true');document.body.appendChild(jsCode);}());";
-
-$bookmarklet_especifica = <<<'EOD'
-javascript:(function() {
-	var text = prompt( 'Persona a buscar','' ).toUpperCase()
-	.replace(/Á/gi,"A")
-	.replace(/É/gi,"E")
-	.replace(/Í/gi,"I")
-	.replace(/Ó/gi,"O")
-	.replace(/Ú/gi,"U")
-	;
-	var request = new XMLHttpRequest();
-	request.open("GET", "https://<url_suffix>/phone.php?xhr=true&consulta="+text, true);
-	request.onreadystatechange = function() {
-	  var done = 4, ok = 200;
-	  if (request.readyState == done && request.status == ok) {
-	    if (request.responseText) {
-	      alert ( request.responseText.replace(/(^"|\$"$|"$)/g, '' ).trim().replace(/\=\>$/gm, '' ).replace(/\$/gm, '\n' ) );
-	    }
-	  }
-	};
-	request.send(null);
-})();
-EOD;
-
-$bookmarklet_generica = str_replace ( '<url_suffix>', $_config['url_suffix'], $bookmarklet_generica );
-$bookmarklet_generica_abreviada = str_replace ( '<url_suffix>', $_config['url_suffix'], $bookmarklet_generica_abreviada );
-$bookmarklet_especifica = str_replace ( '<url_suffix>', $_config['url_suffix'], $bookmarklet_especifica );
-
-$template->assign( 'url_bookmarklet', $bookmarklet_generica_abreviada );
 
 // Filtramos (a mano):
 // "SIN ASIGNAR ..."

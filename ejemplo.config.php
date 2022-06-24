@@ -36,11 +36,3 @@ if ( file_exists ( 'config_ignorados.php' ) ) {
     // Si no existe el archivo de configuración, creamos una lista vacía
     $_config = array_merge ( $_config, ['lista_ignorados' => array () ] );
 }
-
-// Fichero de configuración opcional: configuración LDAP (en caso de usarse en el futuro -está en desarrollo-)
-if ( file_exists ( 'config_ldap.php' ) ) {
-    include_once 'config_ldap.php';
-} elseif ( $_config['ldap_active'] ) {
-    // Si no existe el archivo de configuración, desactivamos el soporte
-    $_config['ldap_active'] = false;
-}
